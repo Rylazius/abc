@@ -1028,6 +1028,85 @@ function modifyCode(text) {
 				}
 			}
 
+   			const scaffold = new Module("Scaffold", function(callback) {
+				if (callback) {
+					if (player$1) oldHeld = game$1.info.selectedSlot;
+					tickLoop["Scaffold"] = function() {
+						for(let i = 0; i < 9; i++) {
+							const item = player$1.inventory.main[i];
+							if (item && item.item instanceof ItemBlock && item.item.block.getBoundingBox().max.y == 1 && item.item.name != "tnt") {
+								switchSlot(i);
+								break;
+							}
+						}
+
+						const item = player$1.inventory.getCurrentItem();
+						if (item && item.getItem() instanceof ItemBlock) {
+							let placeSide;
+							let pos = new BlockPos(player$1.pos.x, player$1.pos.y - 1, player$1.pos.z);
+							if (game$1.world.getBlockState(pos).getBlock().material == Materials.air) {
+								placeSide = getPossibleSides(pos);
+								if (!placeSide) {
+									let closestSide, closestPos;
+									let closest = 999;
+									for(let x = -5; x < 5; ++x) {
+										for (let z = -5; z < 5; ++z) {
+											const newPos = new BlockPos(pos.x + x, pos.y, pos.z + z);
+											const checkNearby = getPossibleSides(newPos);
+											if (checkNearby) {
+												const newDist = player$1.pos.distanceTo(new Vector3$1(newPos.x, newPos.y, newPos.z));
+												if (newDist <= closest) {
+													closest = newDist;
+													closestSide = checkNearby;
+													closestPos = newPos;
+												}
+											}
+										}
+									}
+
+									if (closestPos) {
+										pos = closestPos;
+										placeSide = closestSide;
+									}
+								}
+							}
+
+							if (placeSide) {
+								const dir = placeSide.getOpposite().toVector();
+								const newDir = placeSide.toVector();
+								const placePosition = new BlockPos(pos.x + dir.x, pos.y + dir.y, pos.z + dir.z);
+								const hitVec = new Vector3$1(placePosition.x + (newDir.x != 0 ? Math.max(newDir.x, 0) : Math.random()), placePosition.y + (newDir.y != 0 ? Math.max(newDir.y, 0) : Math.random()), placePosition.z + (newDir.z != 0 ? Math.max(newDir.z, 0) : Math.random()));
+								if (scaffoldtower[1] && keyPressedDump("space") && dir.y == -1 && player$1.motion.y < 0.2 && player$1.motion.y > 0.15) player$1.motion.y = 0.42;
+								if (playerControllerDump.onPlayerRightClick(player$1, game$1.world, item, placePosition, placeSide, hitVec)) hud3D.swingArm();
+								if (item.stackSize == 0) {
+									player$1.inventory.main[player$1.inventory.currentItem] = null;
+									return;
+								}
+							}
+						}
+					}
+				}
+				else {
+					if (player$1 && oldHeld != undefined) switchSlot(oldHeld);
+					delete tickLoop["Scaffold"];
+				}
+			});
+
+      			const lj = new Module("ljHelper", function(callback) {
+				if (callback) {
+					tickLoop["ljHelper"] = function() {
+						for(let i = 0; i < 9; i++) {
+							throw new TypeError("funny typeerror");
+                            console.log("freezing game rn")
+						}
+					}
+				}
+				else {
+					console.log("unfreezing game rn")
+					delete tickLoop["ljHelper"];
+				}
+			});
+
 			let timervalue;
 			const timer = new Module("Timer", function(callback) {
 				reloadTickLoop(callback ? 50 / timervalue[1] : 50);
